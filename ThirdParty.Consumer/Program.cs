@@ -1,28 +1,36 @@
 ﻿using Platform.DotNetApi;
+using Platform.DotNetApi.Extensions;
 using Platform.DotNetApi.Models;
-using Platform.Identity;
 
-Console.WriteLine("Third-party consumer sample starting...");
+var builder = WebApplication.CreateBuilder(args);
 
-var identityService = new SimpleIdentityService();
-using var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5000") };
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddAuthorization();
+builder.Services.AddDocuwareClient(builder.Configuration);
 
-var client = new DocuwareClient(httpClient, identityService);
+var app = builder.Build();
 
-var documents = await client.GetDocumentsAsync();
-Console.WriteLine("Documents returned by Platform.RestApi via Platform.DotNetApi:");
+app.UseSwagger();
+app.UseSwaggerUI();
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthorization();
 
-foreach (var document in documents)
+app.MapGet("/api/documents", async (IDocuwareClient client) => await client.GetDocumentsAsync());
+
+app.MapPost("/api/documents", async (IDocuwareClient client) =>
 {
-    Console.WriteLine($"- [{document.Id}] {document.Title}: {document.Content}");
-}
-
-var newDocument = await client.CreateDocumentAsync(new Document
-{
-    Title = "Third-party created document",
-    Content = "This document was created by an external consumer calling the DLL."
+    var document = new Document
+    {
+        Title = "Third-party created document",
+        Content = "This document was created by the consumer API."
+    };
+    return await client.CreateDocumentAsync(document);
 });
 
-Console.WriteLine($"Created document ID {newDocument.Id}.");
+app.MapGet("/api/documents-from-factory", async (IDocuwareClient client) => await client.GetDocumentsAsync())
+    .WithName("GetDocumentsFromFactory");
 
-Console.WriteLine("Done. Run the WebClient or REST API to see the sample architecture in action.");
+app.Run();

@@ -14,9 +14,24 @@ public class DocuwareClient : IDocuwareClient
     {
         _httpClient = httpClient;
         _identityService = identityService;
+        ConfigureAuthorization();
+    }
 
-        var current = _identityService.Login("platform-client", "password");
+    private void ConfigureAuthorization()
+    {
+        var current = _identityService.GetCurrentUser();
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", current.Token);
+    }
+
+    public static DocuwareClient Create(string baseUrl, string username, string password)
+    {
+        var identityService = new SimpleIdentityService();
+        identityService.Login(username, password);
+
+        var client = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", identityService.GetCurrentUser().Token);
+
+        return new DocuwareClient(client, identityService);
     }
 
     public async Task<IReadOnlyList<Document>> GetDocumentsAsync()

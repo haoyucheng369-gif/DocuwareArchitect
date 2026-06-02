@@ -1,14 +1,12 @@
 using Platform.DotNetApi;
-using Platform.Identity;
+using Platform.DotNetApi.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddSingleton<IUserIdentityService, SimpleIdentityService>();
-builder.Services.AddHttpClient<IDocuwareClient, DocuwareClient>(client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["RestApiBaseUrl"] ?? "http://restapi");
-});
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddDocuwareClient(builder.Configuration);
 
 var app = builder.Build();
 
@@ -18,7 +16,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();

@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   restapi:
     build:
@@ -18,6 +16,22 @@ services:
       - "5001:80"
     environment:
       - ASPNETCORE_URLS=http://+:80
-      - RestApiBaseUrl=http://restapi
+      - DocuwareClient__BaseUrl=http://restapi
+      - DocuwareClient__Username=platform-client
+      - DocuwareClient__Password=password
+    depends_on:
+      - restapi
+
+  thirdparty:
+    build:
+      context: .
+      dockerfile: ThirdParty.Consumer/Dockerfile
+    ports:
+      - "5002:80"
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - DocuwareClient__BaseUrl=http://restapi
+      - DocuwareClient__Username=platform-client
+      - DocuwareClient__Password=password
     depends_on:
       - restapi

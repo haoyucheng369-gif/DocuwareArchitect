@@ -1,45 +1,93 @@
 # DocuwareArchitect Sample
 
-这是一个最小示例，模拟 DocuWare 的架构原理：
+This repository is a product-style architecture sample inspired by DocuWare.
+It is designed for interview presentation and demonstrates how a real platform can separate:
 
-- `Platform.Identity`：身份/令牌模块，提供简单登录和令牌生成。
-- `Platform.RestApi`：底层 REST API 层，暴露 `api/documents` 接口。
-- `Platform.DotNetApi`：.NET API 封装层，作为 DLL 为上层提供 `DocuwareClient`。
-- `Platform.WebClient`：MVC 平台层，调用 `Platform.DotNetApi` 获取数据并展示界面。
-- `ThirdParty.Consumer`：第三方应用，直接引用 `Platform.DotNetApi` DLL，调用平台服务。
+- service layer (`REST API`)
+- SDK/client wrapper (`.NET API`)
+- platform/UI integration
+- third-party consumer integration
+- identity/token handling
 
-## 运行方式
+## Architecture Overview
 
-1. 先启动 REST API：
+```mermaid
+flowchart LR
+    subgraph Platform
+        A[Platform.Identity] --> B[Platform.DotNetApi]
+        B --> C[Platform.WebClient]
+        B --> D[ThirdParty.Consumer]
+    end
 
-   ```powershell
-   dotnet run --project Platform.RestApi\Platform.RestApi.csproj
-   ```
+    subgraph Backend
+        E[Platform.RestApi]
+    end
 
-2. 启动 MVC 平台：
+    C -->|SDK call| B
+    D -->|SDK call| B
+    B -->|HTTP / REST| E
+    A -->|token provider| B
+    E -->|data resources| C
+    E -->|data resources| D
+```
 
-   ```powershell
-   dotnet run --project Platform.WebClient\Platform.WebClient.csproj
-   ```
+## Component Responsibilities
 
-3. 使用 Docker Compose 一键启动：
+- **Platform.Identity**: simplified identity provider and token service. In a real product, this would be replaced with OAuth/OpenID Connect or a centralized token service.
+- **Platform.RestApi**: core REST platform exposing document resources and platform APIs.
+- **Platform.DotNetApi**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IDocuwareClient`).
+- **Platform.WebClient**: MVC platform application that consumes `Platform.DotNetApi` to show how an official platform product can build on the SDK.
+- **ThirdParty.Consumer**: external consumer app simulating a third-party integration that references the SDK DLL and calls the platform via client methods.
 
-   ```powershell
-   docker compose up --build
-   ```
+## Design Principles
 
-   - MVC 平台访问： http://localhost:5001
-   - REST API 访问： http://localhost:5000/api/documents
+- **Separation of concerns**: backend service, SDK wrapper, platform UI, and third-party consumer are clearly separated.
+- **SDK-before-UI**: third-party applications and platform UIs call the same SDK layer, rather than duplicating REST logic.
+- **Product-style integration**: the `.NET API` acts as the stable integration contract for partners and internal consumers.
+- **Pluggable identity**: identity is separated from platform operations, laying the groundwork for OAuth or token-based auth.
 
-4. 运行第三方调用示例：
+## Running the Sample
 
-   ```powershell
-   dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
-   ```
+### Build all projects
 
-## 关键逻辑
+```powershell
+dotnet build
+```
 
-- `Platform.RestApi` 提供了文档列表读取和新增接口。
-- `Platform.DotNetApi` 将 REST API 调用封装为 `IDocuwareClient`，第三方和 MVC 都能共享该 DLL。
-- `Platform.WebClient` 在 `HomeController` 中注入 `IDocuwareClient`，并通过 MVC 展示数据。
-- `ThirdParty.Consumer` 直接实例化 `DocuwareClient` 并调用服务，模拟第三方使用 DLL 的场景。
+### Run with Docker Compose
+
+```powershell
+.\start-docker-with-swagger.ps1 -Build
+```
+
+This script builds and starts all services, then opens the Swagger UI for:
+
+- REST API: `http://localhost:5000/swagger`
+- WebClient: `http://localhost:5001/swagger`
+- ThirdParty Consumer: `http://localhost:5002/swagger`
+
+### Run projects individually
+
+```powershell
+dotnet run --project Platform.RestApi\Platform.RestApi.csproj
+dotnet run --project Platform.WebClient\Platform.WebClient.csproj
+dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
+```
+
+## Key Endpoints
+
+- `GET /api/documents` — read documents
+- `POST /api/documents` — create a document
+- `GET /api/documents-from-factory` — demo of factory-style SDK usage in the third-party consumer
+
+## Why this is interview-ready
+
+This sample shows a real product mindset:
+
+- a scalable backend service
+- a reusable SDK abstraction layer
+- platform-facing UI built on the SDK
+- a separate third-party integration surface
+- a dedicated identity/token module
+
+It is not presented as a pure learning toy, but as a simplified demonstration of the same design ideas you would see in a production platform.
