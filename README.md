@@ -1,22 +1,23 @@
 # DocuwareArchitect Sample
 
-This repository is a product-style architecture sample inspired by DocuWare.
-It is designed for interview presentation and demonstrates how a real platform can separate:
+This repository is a simplified architecture sample inspired by DocuWare-style
+integration platforms. It demonstrates a REST-first backend, an optional .NET
+SDK wrapper, a platform-facing web client, a third-party consumer application,
+and a small identity/token abstraction.
 
-- service layer (`REST API`)
-- SDK/client wrapper (`.NET API`)
-- platform/UI integration
-- third-party consumer integration
-- identity/token handling
+The goal is not to reproduce DocuWare. The project is a compact demonstration
+of how a document platform can expose a core REST API while also offering a
+typed .NET client library for applications that prefer SDK-style integration.
 
 ## Architecture Overview
 
 ```mermaid
 flowchart LR
     subgraph Sample
-        A[Platform.Identity] --> B[Platform.DotNetApi]
-        B --> C[Platform.WebClient]
-        B --> D[ThirdParty.Consumer]
+        A[Platform.Identity]
+        C[Platform.WebClient]
+        D[ThirdParty.Consumer]
+        B[Platform.DotNetApi]
     end
 
     subgraph Backend
@@ -27,11 +28,12 @@ flowchart LR
     D -->|SDK call| B
     B -->|HTTP / REST| E
     A -->|token provider| B
-    E -->|data resources| C
-    E -->|data resources| D
 ```
 
-> Note: this diagram describes the current sample implementation. In a real DocuWare browser WebClient, the UI is typically closer to a frontend client calling `Platform.RestApi` directly, while the `.NET API` remains an optional SDK wrapper for third-party .NET applications.
+> Note: this diagram describes the current sample implementation. In a real
+> browser-based product UI, the web client may call the REST API directly. In
+> this sample, `Platform.WebClient` also uses the SDK so the integration path is
+> easy to inspect in one place.
 
 ## Component Responsibilities
 
@@ -39,16 +41,34 @@ flowchart LR
 - **Platform.RestApi**: core REST platform exposing document resources and platform APIs.
 - **Platform.DotNetApi**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IDocuwareClient`).
 - **Platform.WebClient**: MVC platform application in this sample that consumes `Platform.DotNetApi` to demonstrate a platform UI built on the SDK.
-- **ThirdParty.Consumer**: external consumer app simulating a third-party integration that references the SDK DLL and calls the platform via client methods.
+- **ThirdParty.Consumer**: external consumer app simulating a third-party integration that references the SDK DLL and calls the platform through client methods.
 
-> Note: in a real DocuWare browser WebClient, the UI often behaves more like a frontend client calling the platform REST API directly, while the `.NET API` remains an optional SDK layer for external .NET integrations.
+## What This Demonstrates
+
+- A core REST API as the main platform boundary.
+- A typed .NET client library over the REST API.
+- Shared SDK usage from both an internal sample web client and an external consumer.
+- Token-aware client setup through dependency injection and configuration.
+- A Docker Compose setup for running the services together.
+- A small document workflow slice: list documents, create documents, and consume them from another application.
 
 ## Design Principles
 
 - **Separation of concerns**: backend service, SDK wrapper, platform UI, and third-party consumer are clearly separated.
-- **SDK-before-UI**: third-party applications and platform UIs call the same SDK layer, rather than duplicating REST logic.
-- **Product-style integration**: the `.NET API` acts as the stable integration contract for partners and internal consumers.
-- **Pluggable identity**: identity is separated from platform operations, laying the groundwork for OAuth or token-based auth.
+- **REST-first integration**: the REST API is the core platform contract.
+- **Optional SDK layer**: the `.NET API` provides a typed wrapper for .NET applications without replacing the REST API.
+- **Product-style boundaries**: each project has a focused role and communicates through explicit contracts.
+- **Pluggable identity concept**: identity is separated from platform operations, laying the groundwork for OAuth or token-based auth.
+
+## Scope
+
+This sample intentionally keeps the domain small. It currently models document
+operations only. Areas such as metadata, tasks, roles, groups, annotations,
+workflow activities, document validation, and collaboration are not implemented.
+
+Authentication is also simplified. `Platform.Identity` provides a local token
+concept used by the SDK, but the REST API does not yet enforce a full
+authentication/authorization pipeline.
 
 ## Running the Sample
 
@@ -64,11 +84,11 @@ dotnet build
 .\start-docker-with-swagger.ps1 -Build
 ```
 
-This script builds and starts all services, then opens the Swagger UI for:
+This script builds and starts all services, then opens:
 
-- REST API: `http://localhost:5000/swagger`
-- WebClient: `http://localhost:5001/swagger`
-- ThirdParty Consumer: `http://localhost:5002/swagger`
+- REST API Swagger: `http://localhost:5000/swagger`
+- WebClient UI: `http://localhost:5001`
+- ThirdParty Consumer Swagger: `http://localhost:5002/swagger`
 
 ### Run projects individually
 
@@ -80,18 +100,19 @@ dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
 
 ## Key Endpoints
 
-- `GET /api/documents` — read documents
-- `POST /api/documents` — create a document
-- `GET /api/documents-from-factory` — demo of factory-style SDK usage in the third-party consumer
+- `GET /api/documents` - read documents
+- `POST /api/documents` - create a document
+- `GET /api/documents-from-factory` - demo of SDK usage in the third-party consumer
 
-## Why this is interview-ready
+## Why this architecture sample exists
 
-This sample shows a real product mindset:
+This sample is intended to show practical platform design ideas in a small codebase:
 
-- a scalable backend service
+- a backend service with a clear HTTP boundary
 - a reusable SDK abstraction layer
-- platform-facing UI built on the SDK
+- a platform-facing UI sample
 - a separate third-party integration surface
 - a dedicated identity/token module
 
-It is not presented as a pure learning toy, but as a simplified demonstration of the same design ideas you would see in a production platform.
+It is presented as a simplified product-like architecture, not a complete
+document management system.
