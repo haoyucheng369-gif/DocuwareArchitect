@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  restapi:
+    build:
+      context: .
+      dockerfile: Platform.RestApi/Dockerfile
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+
+  webclient:
+    build:
+      context: .
+      dockerfile: Platform.WebClient/Dockerfile
+    ports:
+      - "5001:80"
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - RestApiBaseUrl=http://restapi
+    depends_on:
+      - restapi

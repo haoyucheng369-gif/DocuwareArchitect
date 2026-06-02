@@ -1,0 +1,6 @@
+@Platform.RestApi_HostAddress = http://localhost:5079
+
+GET {{Platform.RestApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

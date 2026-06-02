@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Platform.DotNetApi/Platform.DotNetApi.csproj" />
+  <Project Path="Platform.Identity/Platform.Identity.csproj" />
+  <Project Path="Platform.RestApi/Platform.RestApi.csproj" />
+  <Project Path="Platform.WebClient/Platform.WebClient.csproj" />
+  <Project Path="ThirdParty.Consumer/ThirdParty.Consumer.csproj" />
+</Solution>
