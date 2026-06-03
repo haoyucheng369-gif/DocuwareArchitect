@@ -27,7 +27,7 @@ flowchart LR
     C -->|SDK call| B
     D -->|SDK call| B
     B -->|HTTP / REST| E
-    A -->|token provider| B
+    B -->|uses token provider| A
 ```
 
 > Note: this diagram describes the current sample implementation. In a real
