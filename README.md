@@ -1,56 +1,61 @@
-# DocuwareArchitect Sample
+# DocuwareArchitect
 
-This repository is a simplified architecture sample inspired by DocuWare-style
-integration platforms. It demonstrates a REST-first backend, an optional .NET
-SDK wrapper, a platform-facing web client, a third-party consumer application,
-and a small identity/token abstraction.
+This repository models a DocuWare-style integration architecture with a
+REST-first backend, an optional .NET SDK wrapper, a platform-facing web client,
+a third-party consumer application, and a dedicated identity/token boundary.
 
-The goal is not to reproduce DocuWare. The project is a compact demonstration
-of how a document platform can expose a core REST API while also offering a
-typed .NET client library for applications that prefer SDK-style integration.
+The goal is not to reproduce DocuWare internals. The project focuses on the
+main integration shape of a document platform: browser-facing platform
+operations use REST endpoints directly, while external .NET integrations can
+use a typed client library over the same REST API.
 
 ## Architecture Overview
 
 ```mermaid
-flowchart LR
-    subgraph Sample
-        A[Platform.Identity]
-        C[Platform.WebClient]
-        D[ThirdParty.Consumer]
-        B[Platform.DotNetApi]
+flowchart TB
+    subgraph Core["DocuwareArchitect Core"]
+        I[Platform.Identity]
+        R[Platform.RestApi]
+        S[Platform.DotNetApi]
     end
 
-    subgraph Backend
-        E[Platform.RestApi]
+    subgraph FirstParty["Platform UI"]
+        W[Platform.WebClient]
     end
 
-    C -->|HTTP / REST| E
-    D -->|SDK call| B
-    B -->|HTTP / REST| E
-    B -->|uses token provider| A
+    subgraph External["Third-party integration"]
+        T[ThirdParty.Consumer]
+    end
+
+    W -->|HTTP / REST| R
+    W -->|auth context| I
+    T -->|SDK call| S
+    S -->|HTTP / REST| R
+    S -->|uses token provider| I
 ```
 
-> Note: this diagram describes the current sample implementation. The web
-> client calls the REST API directly, while the `.NET API` remains an optional
-> SDK wrapper for third-party .NET applications.
+> Note: this diagram describes the current implementation. The web client calls
+> the REST API directly, while the `.NET API` remains an optional SDK wrapper
+> for third-party .NET applications.
 
 ## Component Responsibilities
 
-- **Platform.Identity**: simplified identity provider and token service. In a real product, this would be replaced with OAuth/OpenID Connect or a centralized token service.
+- **Platform.Identity**: identity and token boundary used by both the browser-facing web client path and the SDK-based integration path. In a production product, this would be implemented with OAuth/OpenID Connect or a centralized identity service.
 - **Platform.RestApi**: core REST platform exposing document resources and platform APIs.
 - **Platform.DotNetApi**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IDocuwareClient`).
 - **Platform.WebClient**: MVC platform application that calls `Platform.RestApi` directly, similar to a browser-hosted product UI using platform endpoints.
 - **ThirdParty.Consumer**: external consumer app simulating a third-party integration that references the SDK DLL and calls the platform through client methods.
 
-## What This Demonstrates
+## Architecture Coverage
 
 - A core REST API as the main platform boundary.
 - A typed .NET client library over the REST API.
 - A first-party web client that calls REST endpoints directly.
 - A third-party .NET consumer that calls the same REST platform through the SDK.
-- Token-aware client setup through dependency injection and configuration.
-- A Docker Compose setup for running the services together.
-- A small document workflow slice: list documents, create documents, and consume them from another application.
+- Identity/token separation from platform operations.
+- Dependency-injected HTTP clients and configuration-driven service endpoints.
+- Docker Compose orchestration for the platform services.
+- A document workflow slice: list documents, create documents, and consume them from another application.
 
 ## Design Principles
 
@@ -62,15 +67,16 @@ flowchart LR
 
 ## Scope
 
-This sample intentionally keeps the domain small. It currently models document
-operations only. Areas such as metadata, tasks, roles, groups, annotations,
-workflow activities, document validation, and collaboration are not implemented.
+This architecture model currently implements document operations only. Areas
+such as metadata, tasks, roles, groups, annotations, workflow activities,
+document validation, and collaboration are outside the current scope.
 
-Authentication is also simplified. `Platform.Identity` provides a local token
-concept used by the SDK path, but the REST API and web client do not yet enforce
-a full authentication/authorization pipeline.
+Authentication is represented as a separate boundary. `Platform.Identity`
+provides a local token concept for the SDK path and documents where the web
+client authentication context belongs, but the REST API and web client do not
+yet enforce a full authentication/authorization pipeline.
 
-## Running the Sample
+## Running the Architecture
 
 ### Build all projects
 
@@ -104,15 +110,15 @@ dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
 - `POST /api/documents` - create a document
 - `GET /api/documents-from-factory` - demo of SDK usage in the third-party consumer
 
-## Why this architecture sample exists
+## Why this architecture exists
 
-This sample is intended to show practical platform design ideas in a small codebase:
+This project is intended to show practical platform design boundaries:
 
 - a backend service with a clear HTTP boundary
 - a reusable SDK abstraction layer
-- a platform-facing UI sample
+- a platform-facing UI
 - a separate third-party integration surface
 - a dedicated identity/token module
 
-It is presented as a simplified product-like architecture, not a complete
-document management system.
+It is a scoped architecture implementation, not a complete document management
+system.
