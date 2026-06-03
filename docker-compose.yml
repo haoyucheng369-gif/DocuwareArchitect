@@ -16,9 +16,7 @@ services:
       - "5001:80"
     environment:
       - ASPNETCORE_URLS=http://+:80
-      - DocuwareClient__BaseUrl=http://restapi
-      - DocuwareClient__Username=platform-client
-      - DocuwareClient__Password=password
+      - PlatformApi__BaseUrl=http://restapi
     depends_on:
       - restapi
 

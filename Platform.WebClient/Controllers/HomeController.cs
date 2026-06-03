@@ -1,30 +1,30 @@
 using Microsoft.AspNetCore.Mvc;
-using Platform.DotNetApi;
-using Platform.DotNetApi.Models;
+using Platform.WebClient.Clients;
+using Platform.WebClient.Models;
 
 namespace Platform.WebClient.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly IDocuwareClient _docuwareClient;
+    private readonly IPlatformApiClient _platformApiClient;
 
-    public HomeController(IDocuwareClient docuwareClient)
+    public HomeController(IPlatformApiClient platformApiClient)
     {
-        _docuwareClient = docuwareClient;
+        _platformApiClient = platformApiClient;
     }
 
     public async Task<IActionResult> Index()
     {
-        var documents = await _docuwareClient.GetDocumentsAsync();
+        var documents = await _platformApiClient.GetDocumentsAsync();
         return View(documents);
     }
 
     public async Task<IActionResult> CreateSample()
     {
-        await _docuwareClient.CreateDocumentAsync(new Document
+        await _platformApiClient.CreateDocumentAsync(new DocumentViewModel
         {
             Title = "Created by WebClient",
-            Content = "This document was added through the MVC platform layer."
+            Content = "This document was added through the platform web client."
         });
 
         return RedirectToAction(nameof(Index));

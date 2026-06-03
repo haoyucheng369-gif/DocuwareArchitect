@@ -24,30 +24,30 @@ flowchart LR
         E[Platform.RestApi]
     end
 
-    C -->|SDK call| B
+    C -->|HTTP / REST| E
     D -->|SDK call| B
     B -->|HTTP / REST| E
     B -->|uses token provider| A
 ```
 
-> Note: this diagram describes the current sample implementation. In a real
-> browser-based product UI, the web client may call the REST API directly. In
-> this sample, `Platform.WebClient` also uses the SDK so the integration path is
-> easy to inspect in one place.
+> Note: this diagram describes the current sample implementation. The web
+> client calls the REST API directly, while the `.NET API` remains an optional
+> SDK wrapper for third-party .NET applications.
 
 ## Component Responsibilities
 
 - **Platform.Identity**: simplified identity provider and token service. In a real product, this would be replaced with OAuth/OpenID Connect or a centralized token service.
 - **Platform.RestApi**: core REST platform exposing document resources and platform APIs.
 - **Platform.DotNetApi**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IDocuwareClient`).
-- **Platform.WebClient**: MVC platform application in this sample that consumes `Platform.DotNetApi` to demonstrate a platform UI built on the SDK.
+- **Platform.WebClient**: MVC platform application that calls `Platform.RestApi` directly, similar to a browser-hosted product UI using platform endpoints.
 - **ThirdParty.Consumer**: external consumer app simulating a third-party integration that references the SDK DLL and calls the platform through client methods.
 
 ## What This Demonstrates
 
 - A core REST API as the main platform boundary.
 - A typed .NET client library over the REST API.
-- Shared SDK usage from both an internal sample web client and an external consumer.
+- A first-party web client that calls REST endpoints directly.
+- A third-party .NET consumer that calls the same REST platform through the SDK.
 - Token-aware client setup through dependency injection and configuration.
 - A Docker Compose setup for running the services together.
 - A small document workflow slice: list documents, create documents, and consume them from another application.
@@ -67,8 +67,8 @@ operations only. Areas such as metadata, tasks, roles, groups, annotations,
 workflow activities, document validation, and collaboration are not implemented.
 
 Authentication is also simplified. `Platform.Identity` provides a local token
-concept used by the SDK, but the REST API does not yet enforce a full
-authentication/authorization pipeline.
+concept used by the SDK path, but the REST API and web client do not yet enforce
+a full authentication/authorization pipeline.
 
 ## Running the Sample
 
