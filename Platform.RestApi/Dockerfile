@@ -1,8 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["Platform.Identity/Platform.Identity.csproj", "Platform.Identity/"]
-COPY ["Platform.DotNetApi/Platform.DotNetApi.csproj", "Platform.DotNetApi/"]
 COPY ["Platform.RestApi/Platform.RestApi.csproj", "Platform.RestApi/"]
 RUN dotnet restore "Platform.RestApi/Platform.RestApi.csproj"
 

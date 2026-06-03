@@ -73,8 +73,9 @@ document validation, and collaboration are outside the current scope.
 
 Authentication is represented as a separate boundary backed by Keycloak. The
 current repository includes a realm import with clients for the web client, REST
-API, and SDK path. REST API token validation is enabled. WebClient OIDC cookie
-login and SDK token acquisition are the next integration steps.
+API, and SDK path. REST API token validation and SDK client credentials token
+acquisition are enabled. WebClient OIDC cookie login is the next integration
+step.
 
 ## Running the Architecture
 

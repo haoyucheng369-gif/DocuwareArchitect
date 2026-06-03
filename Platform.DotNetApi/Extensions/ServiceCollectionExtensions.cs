@@ -1,8 +1,7 @@
-using System.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Platform.Identity;
+using Platform.DotNetApi.Auth;
 
 namespace Platform.DotNetApi.Extensions;
 
@@ -15,19 +14,17 @@ public static class ServiceCollectionExtensions
         services.AddOptions<DocuwareClientOptions>()
             .Bind(section)
             .Validate(options => !string.IsNullOrWhiteSpace(options.BaseUrl), "DocuwareClient:BaseUrl is required")
-            .Validate(options => !string.IsNullOrWhiteSpace(options.Username), "DocuwareClient:Username is required")
-            .Validate(options => !string.IsNullOrWhiteSpace(options.Password), "DocuwareClient:Password is required");
+            .Validate(options => !string.IsNullOrWhiteSpace(options.TokenEndpoint), "DocuwareClient:TokenEndpoint is required")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.ClientId), "DocuwareClient:ClientId is required")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.ClientSecret), "DocuwareClient:ClientSecret is required");
 
-        services.AddSingleton<IUserIdentityService, SimpleIdentityService>();
+        services.AddSingleton<IAccessTokenProvider, KeycloakClientCredentialsTokenProvider>();
 
         services.AddHttpClient<IDocuwareClient, DocuwareClient>((provider, client) =>
         {
             var clientOptions = provider.GetRequiredService<IOptions<DocuwareClientOptions>>().Value;
-            var identityService = provider.GetRequiredService<IUserIdentityService>();
 
-            identityService.Login(clientOptions.Username, clientOptions.Password);
             client.BaseAddress = new Uri(clientOptions.BaseUrl);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", identityService.GetCurrentUser().Token);
         });
 
         return services;

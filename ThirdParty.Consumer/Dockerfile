@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["Platform.Identity/Platform.Identity.csproj", "Platform.Identity/"]
 COPY ["Platform.DotNetApi/Platform.DotNetApi.csproj", "Platform.DotNetApi/"]
 COPY ["ThirdParty.Consumer/ThirdParty.Consumer.csproj", "ThirdParty.Consumer/"]
 RUN dotnet restore "ThirdParty.Consumer/ThirdParty.Consumer.csproj"

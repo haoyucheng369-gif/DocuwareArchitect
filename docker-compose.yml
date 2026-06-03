@@ -48,8 +48,9 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:80
       - DocuwareClient__BaseUrl=http://restapi
-      - DocuwareClient__Username=platform-client
-      - DocuwareClient__Password=password
+      - DocuwareClient__TokenEndpoint=http://keycloak:8080/realms/docuware-architect/protocol/openid-connect/token
+      - DocuwareClient__ClientId=platform-dotnet-sdk
+      - DocuwareClient__ClientSecret=platform-dotnet-sdk-secret
     depends_on:
       - keycloak
       - restapi
