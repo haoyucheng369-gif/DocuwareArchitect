@@ -1,0 +1,110 @@
+{
+  "realm": "docuware-architect",
+  "displayName": "DocuwareArchitect",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "name": "platform-user",
+        "description": "User allowed to access platform web operations."
+      },
+      {
+        "name": "platform-integration",
+        "description": "Service role for SDK-based integrations."
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "platform-webclient",
+      "name": "Platform WebClient",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "platform-webclient-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5001/signin-oidc",
+        "http://localhost:5167/signin-oidc"
+      ],
+      "webOrigins": [
+        "http://localhost:5001",
+        "http://localhost:5167"
+      ],
+      "protocolMappers": [
+        {
+          "name": "platform-rest-api audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "platform-rest-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "platform-dotnet-sdk",
+      "name": "Platform .NET SDK",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "platform-dotnet-sdk-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "platform-rest-api audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "platform-rest-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "platform-rest-api",
+      "name": "Platform REST API",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "architect.user",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Architect",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "platform-user"
+      ]
+    }
+  ]
+}

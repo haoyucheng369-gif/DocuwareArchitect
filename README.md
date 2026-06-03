@@ -2,7 +2,7 @@
 
 This repository models a DocuWare-style integration architecture with a
 REST-first backend, an optional .NET SDK wrapper, a platform-facing web client,
-a third-party consumer application, and a dedicated identity/token boundary.
+a third-party consumer application, and a Keycloak-backed identity boundary.
 
 The goal is not to reproduce DocuWare internals. The project focuses on the
 main integration shape of a document platform: browser-facing platform
@@ -14,7 +14,7 @@ use a typed client library over the same REST API.
 ```mermaid
 flowchart TB
     subgraph Core["DocuwareArchitect Core"]
-        I[Platform.Identity]
+        I[Keycloak Identity Service]
         R[Platform.RestApi]
         S[Platform.DotNetApi]
     end
@@ -40,8 +40,8 @@ flowchart TB
 
 ## Component Responsibilities
 
-- **Platform.Identity**: identity and token boundary used by both the browser-facing web client path and the SDK-based integration path. In a production product, this would be implemented with OAuth/OpenID Connect or a centralized identity service.
-- **Platform.RestApi**: core REST platform exposing document resources and platform APIs.
+- **Keycloak Identity Service**: OAuth2/OpenID Connect identity boundary used by both the browser-facing web client path and the SDK-based integration path.
+- **Platform.RestApi**: core REST platform exposing document resources and platform APIs. Document endpoints are protected with JWT bearer authentication issued by Keycloak.
 - **Platform.DotNetApi**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IDocuwareClient`).
 - **Platform.WebClient**: MVC platform application that calls `Platform.RestApi` directly, similar to a browser-hosted product UI using platform endpoints.
 - **ThirdParty.Consumer**: external consumer app simulating a third-party integration that references the SDK DLL and calls the platform through client methods.
@@ -71,10 +71,10 @@ This architecture model currently implements document operations only. Areas
 such as metadata, tasks, roles, groups, annotations, workflow activities,
 document validation, and collaboration are outside the current scope.
 
-Authentication is represented as a separate boundary. `Platform.Identity`
-provides a local token concept for the SDK path and documents where the web
-client authentication context belongs, but the REST API and web client do not
-yet enforce a full authentication/authorization pipeline.
+Authentication is represented as a separate boundary backed by Keycloak. The
+current repository includes a realm import with clients for the web client, REST
+API, and SDK path. REST API token validation is enabled. WebClient OIDC cookie
+login and SDK token acquisition are the next integration steps.
 
 ## Running the Architecture
 
@@ -95,6 +95,20 @@ This script builds and starts all services, then opens:
 - REST API Swagger: `http://localhost:5000/swagger`
 - WebClient UI: `http://localhost:5001`
 - ThirdParty Consumer Swagger: `http://localhost:5002/swagger`
+- Keycloak Admin Console: `http://localhost:8080/admin/master/console/`
+
+Keycloak local admin credentials for the Admin Console:
+
+- Username: `admin`
+- Password: `admin`
+
+Imported realm:
+
+- Realm: `docuware-architect`
+- Web client: `platform-webclient`
+- SDK client: `platform-dotnet-sdk`
+- REST API client: `platform-rest-api`
+- Realm test user for future WebClient/OIDC login: `architect.user` / `password`
 
 ### Run projects individually
 
@@ -106,6 +120,7 @@ dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
 
 ## Key Endpoints
 
+- `GET /api/auth/token` - get a Keycloak client credentials token for local API verification
 - `GET /api/documents` - read documents
 - `POST /api/documents` - create a document
 - `GET /api/documents-from-factory` - demo of SDK usage in the third-party consumer
@@ -118,7 +133,7 @@ This project is intended to show practical platform design boundaries:
 - a reusable SDK abstraction layer
 - a platform-facing UI
 - a separate third-party integration surface
-- a dedicated identity/token module
+- a dedicated OAuth2/OpenID Connect identity boundary
 
 It is a scoped architecture implementation, not a complete document management
 system.

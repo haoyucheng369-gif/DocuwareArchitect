@@ -9,8 +9,9 @@ docker compose $composeArgs
 
 $urls = @(
     'http://localhost:5000/swagger',
-    'http://localhost:5001/swagger',
-    'http://localhost:5002/swagger'
+    'http://localhost:5001',
+    'http://localhost:5002/swagger',
+    'http://localhost:8080/admin/master/console/'
 )
 
 $timeoutSeconds = 60

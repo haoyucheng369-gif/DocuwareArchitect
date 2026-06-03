@@ -1,4 +1,15 @@
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.2
+    command: start-dev --import-realm
+    ports:
+      - "8080:8080"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    volumes:
+      - ./identity/keycloak/docuware-architect-realm.json:/opt/keycloak/data/import/docuware-architect-realm.json:ro
+
   restapi:
     build:
       context: .
@@ -7,6 +18,13 @@ services:
       - "5000:80"
     environment:
       - ASPNETCORE_URLS=http://+:80
+      - Authentication__Authority=http://keycloak:8080/realms/docuware-architect
+      - Authentication__Audience=platform-rest-api
+      - TokenClient__TokenEndpoint=http://keycloak:8080/realms/docuware-architect/protocol/openid-connect/token
+      - TokenClient__ClientId=platform-dotnet-sdk
+      - TokenClient__ClientSecret=platform-dotnet-sdk-secret
+    depends_on:
+      - keycloak
 
   webclient:
     build:
@@ -18,6 +36,7 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - PlatformApi__BaseUrl=http://restapi
     depends_on:
+      - keycloak
       - restapi
 
   thirdparty:
@@ -32,4 +51,5 @@ services:
       - DocuwareClient__Username=platform-client
       - DocuwareClient__Password=password
     depends_on:
+      - keycloak
       - restapi
