@@ -156,7 +156,6 @@ dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
 - ThirdParty Consumer `POST /api/token/client` - get a client credentials token for Swagger testing
 - ThirdParty Consumer `GET /api/documents` - call the REST API through the SDK using the supplied bearer token
 - ThirdParty Consumer `POST /api/documents` - create a document through the SDK using the supplied bearer token
-- ThirdParty Consumer `GET /api/documents/from-sdk` - SDK-backed document query in the third-party consumer
 - ThirdParty Consumer `GET /api/documents/confidential` - call the admin-only document endpoint through the SDK
 - ThirdParty Consumer `GET /api/documents/integration-export` - call the integration export endpoint through the SDK
 

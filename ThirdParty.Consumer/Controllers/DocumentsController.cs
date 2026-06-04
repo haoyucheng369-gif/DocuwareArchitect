@@ -40,12 +40,6 @@ public class DocumentsController : ControllerBase
         return await ExecuteAsync(() => _client.CreateDocumentAsync(document));
     }
 
-    [HttpGet("from-sdk")]
-    public async Task<IResult> GetDocumentsFromSdk()
-    {
-        return await ExecuteAsync(() => _client.GetDocumentsAsync());
-    }
-
     [HttpGet("integration-export")]
     public async Task<IResult> GetIntegrationExportDocuments()
     {
