@@ -1,13 +1,13 @@
 using System.Net.Http.Json;
-using Platform.DotNetApi.Models;
+using Platform.DotNetSdk.Models;
 
-namespace Platform.DotNetApi;
+namespace Platform.DotNetSdk;
 
-public class DocuwareClient : IDocuwareClient
+public class PlatformClient : IPlatformClient
 {
     private readonly HttpClient _httpClient;
 
-    public DocuwareClient(HttpClient httpClient)
+    public PlatformClient(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }

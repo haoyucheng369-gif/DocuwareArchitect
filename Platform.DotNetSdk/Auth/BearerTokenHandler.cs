@@ -1,6 +1,6 @@
 using System.Net.Http.Headers;
 
-namespace Platform.DotNetApi.Auth;
+namespace Platform.DotNetSdk.Auth;
 
 public class BearerTokenHandler : DelegatingHandler
 {

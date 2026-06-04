@@ -1,3 +1,5 @@
+name: document-platform-architect
+
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.6.2
@@ -8,7 +10,7 @@ services:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
     volumes:
-      - ./identity/keycloak/docuware-architect-realm.json:/opt/keycloak/data/import/docuware-architect-realm.json:ro
+      - ./identity/keycloak/document-platform-realm.json:/opt/keycloak/data/import/document-platform-realm.json:ro
 
   restapi:
     build:
@@ -18,7 +20,7 @@ services:
       - "5000:80"
     environment:
       - ASPNETCORE_URLS=http://+:80
-      - Authentication__Authority=http://keycloak:8080/realms/docuware-architect
+      - Authentication__Authority=http://keycloak:8080/realms/document-platform
       - Authentication__Audience=platform-rest-api
     depends_on:
       - keycloak
@@ -44,8 +46,8 @@ services:
       - "5002:80"
     environment:
       - ASPNETCORE_URLS=http://+:80
-      - DocuwareClient__BaseUrl=http://restapi
-      - TokenClient__TokenEndpoint=http://keycloak:8080/realms/docuware-architect/protocol/openid-connect/token
+      - PlatformClient__BaseUrl=http://restapi
+      - TokenClient__TokenEndpoint=http://keycloak:8080/realms/document-platform/protocol/openid-connect/token
       - TokenClient__ClientId=thirdparty-consumer
       - TokenClient__ClientSecret=thirdparty-consumer-secret
     depends_on:

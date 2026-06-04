@@ -1,10 +1,11 @@
-# DocuwareArchitect
+# DocumentPlatformArchitect
 
-This repository models a DocuWare-style integration architecture with a
-REST-first backend, an optional .NET SDK wrapper, a platform-facing web client,
-a third-party consumer application, and a Keycloak-backed identity boundary.
+This repository models an enterprise document platform integration architecture
+with a REST-first backend, an optional .NET SDK wrapper, a platform-facing web
+client, a third-party consumer application, and a Keycloak-backed identity
+boundary.
 
-The goal is not to reproduce DocuWare internals. The project focuses on the
+The goal is not to reproduce vendor internals. The project focuses on the
 main integration shape of a document platform: browser-facing platform
 operations use REST endpoints directly, while external .NET integrations can
 use a typed client library over the same REST API.
@@ -13,10 +14,10 @@ use a typed client library over the same REST API.
 
 ```mermaid
 flowchart TB
-    subgraph Core["DocuwareArchitect Core"]
+    subgraph Core["DocumentPlatformArchitect Core"]
         I[Keycloak Identity Service]
         R[Platform.RestApi]
-        S[Platform.DotNetApi]
+        S[Platform.DotNetSdk]
     end
 
     subgraph FirstParty["Platform UI"]
@@ -37,14 +38,14 @@ flowchart TB
 
 > Note: this diagram describes the current implementation. The web client calls
 > the REST API directly; OIDC cookie login for the web client is the next step.
-> The `.NET API` remains an optional SDK wrapper for third-party .NET
+> The `.NET SDK` remains an optional wrapper for third-party .NET
 > applications.
 
 ## Component Responsibilities
 
 - **Keycloak Identity Service**: OAuth2/OpenID Connect identity boundary used by both the browser-facing web client path and the SDK-based integration path.
 - **Platform.RestApi**: core REST platform exposing document resources and platform APIs. Document endpoints are protected with JWT bearer authentication issued by Keycloak.
-- **Platform.DotNetApi**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IDocuwareClient`). The SDK accepts a host-provided token provider and attaches the returned bearer token to REST API requests. It does not own the OAuth client registration.
+- **Platform.DotNetSdk**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IPlatformClient`). The SDK accepts a host-provided token provider and attaches the returned bearer token to REST API requests. It does not own the OAuth client registration.
 - **Platform.WebClient**: MVC platform application that calls `Platform.RestApi` directly, similar to a browser-hosted product UI using platform endpoints.
 - **ThirdParty.Consumer**: external consumer app simulating a third-party integration that references the SDK DLL and calls the platform through client methods.
 
@@ -63,7 +64,7 @@ flowchart TB
 
 - **Separation of concerns**: backend service, SDK wrapper, platform UI, and third-party consumer are clearly separated.
 - **REST-first integration**: the REST API is the core platform contract.
-- **Optional SDK layer**: the `.NET API` provides a typed wrapper for .NET applications without replacing the REST API.
+- **Optional SDK layer**: the `.NET SDK` provides a typed wrapper for .NET applications without replacing the REST API.
 - **Product-style boundaries**: each project has a focused role and communicates through explicit contracts.
 - **Pluggable identity concept**: identity is separated from platform operations through OAuth2/OpenID Connect and JWT bearer validation.
 
@@ -109,7 +110,7 @@ Keycloak local admin credentials for the Admin Console:
 
 Imported realm:
 
-- Realm: `docuware-architect`
+- Realm: `document-platform`
 - Web client: `platform-webclient`
 - Third-party OAuth client: `thirdparty-consumer`
 - REST API client: `platform-rest-api`
@@ -122,8 +123,8 @@ before calling protected document endpoints.
 
 Role-based verification endpoints are also available:
 
-- `POST /api/auth/token/user` returns a token for `architect.user` by default
-- `POST /api/auth/token/admin` returns a token for `architect.admin` by default
+- `POST /api/token/user` returns a token for `architect.user` by default
+- `POST /api/token/admin` returns a token for `architect.admin` by default
 - `GET /api/documents` allows `platform-user` or `platform-admin`
 - `GET /api/documents/confidential` allows `platform-admin` only
 
@@ -146,11 +147,11 @@ dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
 - REST API `GET /api/documents` - read documents
 - REST API `POST /api/documents` - create a document
 - REST API `GET /api/documents/confidential` - read admin-only confidential documents
-- ThirdParty Consumer `POST /api/auth/token/user` - get a user token for Swagger testing
-- ThirdParty Consumer `POST /api/auth/token/admin` - get an admin token for Swagger testing
+- ThirdParty Consumer `POST /api/token/user` - get a user token for Swagger testing
+- ThirdParty Consumer `POST /api/token/admin` - get an admin token for Swagger testing
 - ThirdParty Consumer `GET /api/documents` - call the REST API through the SDK using the supplied bearer token
 - ThirdParty Consumer `POST /api/documents` - create a document through the SDK using the supplied bearer token
-- ThirdParty Consumer `GET /api/documents-from-factory` - SDK-backed document query in the third-party consumer
+- ThirdParty Consumer `GET /api/documents/from-sdk` - SDK-backed document query in the third-party consumer
 - ThirdParty Consumer `GET /api/documents/confidential` - call the admin-only document endpoint through the SDK
 
 ## Why this architecture exists

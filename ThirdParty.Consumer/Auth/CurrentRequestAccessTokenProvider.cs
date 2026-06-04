@@ -1,4 +1,4 @@
-using Platform.DotNetApi.Auth;
+using Platform.DotNetSdk.Auth;
 
 namespace ThirdParty.Consumer.Auth;
 

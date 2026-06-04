@@ -1,6 +1,6 @@
 {
-  "realm": "docuware-architect",
-  "displayName": "DocuwareArchitect",
+  "realm": "document-platform",
+  "displayName": "DocumentPlatformArchitect",
   "enabled": true,
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,

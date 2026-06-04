@@ -1,4 +1,4 @@
-namespace Platform.DotNetApi.Models;
+namespace Platform.DotNetSdk.Models;
 
 public class Document
 {

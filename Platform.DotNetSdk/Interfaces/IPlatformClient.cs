@@ -1,8 +1,8 @@
-using Platform.DotNetApi.Models;
+using Platform.DotNetSdk.Models;
 
-namespace Platform.DotNetApi;
+namespace Platform.DotNetSdk;
 
-public interface IDocuwareClient
+public interface IPlatformClient
 {
     Task<IReadOnlyList<Document>> GetDocumentsAsync();
     Task<IReadOnlyList<Document>> GetConfidentialDocumentsAsync();

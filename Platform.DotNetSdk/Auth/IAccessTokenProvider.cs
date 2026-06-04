@@ -1,4 +1,4 @@
-namespace Platform.DotNetApi.Auth;
+namespace Platform.DotNetSdk.Auth;
 
 public interface IAccessTokenProvider
 {
