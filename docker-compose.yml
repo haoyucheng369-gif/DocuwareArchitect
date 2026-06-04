@@ -20,9 +20,6 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - Authentication__Authority=http://keycloak:8080/realms/docuware-architect
       - Authentication__Audience=platform-rest-api
-      - TokenClient__TokenEndpoint=http://keycloak:8080/realms/docuware-architect/protocol/openid-connect/token
-      - TokenClient__ClientId=platform-dotnet-sdk
-      - TokenClient__ClientSecret=platform-dotnet-sdk-secret
     depends_on:
       - keycloak
 
@@ -48,9 +45,9 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:80
       - DocuwareClient__BaseUrl=http://restapi
-      - DocuwareClient__TokenEndpoint=http://keycloak:8080/realms/docuware-architect/protocol/openid-connect/token
-      - DocuwareClient__ClientId=platform-dotnet-sdk
-      - DocuwareClient__ClientSecret=platform-dotnet-sdk-secret
+      - TokenClient__TokenEndpoint=http://keycloak:8080/realms/docuware-architect/protocol/openid-connect/token
+      - TokenClient__ClientId=thirdparty-consumer
+      - TokenClient__ClientSecret=thirdparty-consumer-secret
     depends_on:
       - keycloak
       - restapi

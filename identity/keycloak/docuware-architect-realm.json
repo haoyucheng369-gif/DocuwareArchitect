@@ -12,8 +12,8 @@
         "description": "User allowed to access platform web operations."
       },
       {
-        "name": "platform-integration",
-        "description": "Service role for SDK-based integrations."
+        "name": "platform-admin",
+        "description": "Administrator allowed to execute privileged platform operations."
       }
     ]
   },
@@ -27,7 +27,7 @@
       "secret": "platform-webclient-secret",
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "redirectUris": [
         "http://localhost:5001/signin-oidc",
@@ -49,19 +49,34 @@
             "access.token.claim": "true"
           }
         }
+        ,
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
       ]
     },
     {
-      "clientId": "platform-dotnet-sdk",
-      "name": "Platform .NET SDK",
+      "clientId": "thirdparty-consumer",
+      "name": "ThirdParty Consumer",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "platform-dotnet-sdk-secret",
+      "secret": "thirdparty-consumer-secret",
       "standardFlowEnabled": false,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
       "protocolMappers": [
         {
           "name": "platform-rest-api audience",
@@ -72,6 +87,21 @@
             "included.client.audience": "platform-rest-api",
             "id.token.claim": "false",
             "access.token.claim": "true"
+          }
+        }
+        ,
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
           }
         }
       ]
@@ -92,7 +122,9 @@
     {
       "username": "architect.user",
       "enabled": true,
+      "email": "architect.user@example.local",
       "emailVerified": true,
+      "requiredActions": [],
       "firstName": "Architect",
       "lastName": "User",
       "credentials": [
@@ -104,6 +136,26 @@
       ],
       "realmRoles": [
         "platform-user"
+      ]
+    },
+    {
+      "username": "architect.admin",
+      "enabled": true,
+      "email": "architect.admin@example.local",
+      "emailVerified": true,
+      "requiredActions": [],
+      "firstName": "Architect",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "platform-user",
+        "platform-admin"
       ]
     }
   ]

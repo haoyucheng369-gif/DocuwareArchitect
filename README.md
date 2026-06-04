@@ -28,21 +28,23 @@ flowchart TB
     end
 
     W -->|HTTP / REST| R
-    W -->|auth context| I
+    W -.->|OIDC cookie login - next step| I
+    T -->|request user token| I
     T -->|SDK call| S
-    S -->|HTTP / REST| R
-    S -->|uses token provider| I
+    S -->|HTTP / REST with bearer token| R
+    R -->|validate JWT issuer, audience, roles| I
 ```
 
 > Note: this diagram describes the current implementation. The web client calls
-> the REST API directly, while the `.NET API` remains an optional SDK wrapper
-> for third-party .NET applications.
+> the REST API directly; OIDC cookie login for the web client is the next step.
+> The `.NET API` remains an optional SDK wrapper for third-party .NET
+> applications.
 
 ## Component Responsibilities
 
 - **Keycloak Identity Service**: OAuth2/OpenID Connect identity boundary used by both the browser-facing web client path and the SDK-based integration path.
 - **Platform.RestApi**: core REST platform exposing document resources and platform APIs. Document endpoints are protected with JWT bearer authentication issued by Keycloak.
-- **Platform.DotNetApi**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IDocuwareClient`). The SDK accepts a host-provided token provider and forwards the resulting bearer token to the REST API.
+- **Platform.DotNetApi**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IDocuwareClient`). The SDK accepts a host-provided token provider and attaches the returned bearer token to REST API requests. It does not own the OAuth client registration.
 - **Platform.WebClient**: MVC platform application that calls `Platform.RestApi` directly, similar to a browser-hosted product UI using platform endpoints.
 - **ThirdParty.Consumer**: external consumer app simulating a third-party integration that references the SDK DLL and calls the platform through client methods.
 
@@ -51,7 +53,7 @@ flowchart TB
 - A core REST API as the main platform boundary.
 - A typed .NET client library over the REST API.
 - A first-party web client that calls REST endpoints directly.
-- A third-party .NET consumer that calls the same REST platform through the SDK and supplies its own OAuth token provider.
+- A third-party .NET consumer that obtains a user token through its own OAuth client registration and calls the same REST platform through the SDK.
 - Identity/token separation from platform operations.
 - Dependency-injected HTTP clients and configuration-driven service endpoints.
 - Docker Compose orchestration for the platform services.
@@ -63,7 +65,7 @@ flowchart TB
 - **REST-first integration**: the REST API is the core platform contract.
 - **Optional SDK layer**: the `.NET API` provides a typed wrapper for .NET applications without replacing the REST API.
 - **Product-style boundaries**: each project has a focused role and communicates through explicit contracts.
-- **Pluggable identity concept**: identity is separated from platform operations, laying the groundwork for OAuth or token-based auth.
+- **Pluggable identity concept**: identity is separated from platform operations through OAuth2/OpenID Connect and JWT bearer validation.
 
 ## Scope
 
@@ -73,9 +75,11 @@ document validation, and collaboration are outside the current scope.
 
 Authentication is represented as a separate boundary backed by Keycloak. The
 current repository includes a realm import with clients for the web client, REST
-API, and SDK path. REST API token validation is enabled, and the SDK accepts a
-host-managed access token provider. WebClient OIDC cookie login is the next
-integration step.
+API, and a third-party consumer application. REST API token validation is
+enabled. The SDK delegates token resolution to the host application; the current
+third-party consumer reads a bearer token from the incoming request and forwards
+it through the SDK.
+WebClient OIDC cookie login is the next integration step.
 
 ## Running the Architecture
 
@@ -107,9 +111,27 @@ Imported realm:
 
 - Realm: `docuware-architect`
 - Web client: `platform-webclient`
-- SDK client: `platform-dotnet-sdk`
+- Third-party OAuth client: `thirdparty-consumer`
 - REST API client: `platform-rest-api`
-- Realm test user for future WebClient/OIDC login: `architect.user` / `password`
+- Realm user: `architect.user` / `password` with `platform-user`
+- Realm admin: `architect.admin` / `password` with `platform-user` and `platform-admin`
+
+For local API verification, use the ThirdParty Consumer Swagger UI to request a
+user token. Paste the returned bearer token into the Swagger Authorize dialog
+before calling protected document endpoints.
+
+Role-based verification endpoints are also available:
+
+- `POST /api/auth/token/user` returns a token for `architect.user` by default
+- `POST /api/auth/token/admin` returns a token for `architect.admin` by default
+- `GET /api/documents` allows `platform-user` or `platform-admin`
+- `GET /api/documents/confidential` allows `platform-admin` only
+
+Expected result through ThirdParty Consumer Swagger:
+
+- `architect.user` token -> `/api/documents` returns `200`
+- `architect.user` token -> `/api/documents/confidential` returns `403`
+- `architect.admin` token -> both document endpoints return `200`
 
 ### Run projects individually
 
@@ -121,10 +143,15 @@ dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
 
 ## Key Endpoints
 
-- `GET /api/auth/token` - get a Keycloak client credentials token for local API verification
-- `GET /api/documents` - read documents
-- `POST /api/documents` - create a document
-- `GET /api/documents-from-factory` - demo of SDK usage in the third-party consumer
+- REST API `GET /api/documents` - read documents
+- REST API `POST /api/documents` - create a document
+- REST API `GET /api/documents/confidential` - read admin-only confidential documents
+- ThirdParty Consumer `POST /api/auth/token/user` - get a user token for Swagger testing
+- ThirdParty Consumer `POST /api/auth/token/admin` - get an admin token for Swagger testing
+- ThirdParty Consumer `GET /api/documents` - call the REST API through the SDK using the supplied bearer token
+- ThirdParty Consumer `POST /api/documents` - create a document through the SDK using the supplied bearer token
+- ThirdParty Consumer `GET /api/documents-from-factory` - SDK-backed document query in the third-party consumer
+- ThirdParty Consumer `GET /api/documents/confidential` - call the admin-only document endpoint through the SDK
 
 ## Why this architecture exists
 
