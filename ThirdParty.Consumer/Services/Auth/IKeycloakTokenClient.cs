@@ -4,5 +4,5 @@ namespace ThirdParty.Consumer.Services.Auth;
 
 public interface IKeycloakTokenClient
 {
-    Task<TokenResponse> RequestPasswordTokenAsync(PasswordTokenRequest request);
+    Task<TokenResponse> RequestClientCredentialsTokenAsync(ClientCredentialsTokenRequest request);
 }

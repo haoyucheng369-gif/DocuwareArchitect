@@ -116,23 +116,28 @@ Imported realm:
 - REST API client: `platform-rest-api`
 - Realm user: `architect.user` / `password` with `platform-user`
 - Realm admin: `architect.admin` / `password` with `platform-user` and `platform-admin`
+- Service account role: `thirdparty-consumer` has `platform-integration`
 
 For local API verification, use the ThirdParty Consumer Swagger UI to request a
-user token. Paste the returned bearer token into the Swagger Authorize dialog
-before calling protected document endpoints.
+client credentials token. Paste the returned bearer token into the Swagger
+Authorize dialog before calling SDK-backed integration endpoints.
 
-Role-based verification endpoints are also available:
+Application-level verification endpoints are also available:
 
-- `POST /api/token/user` returns a token for `architect.user` by default
-- `POST /api/token/admin` returns a token for `architect.admin` by default
-- `GET /api/documents` allows `platform-user` or `platform-admin`
-- `GET /api/documents/confidential` allows `platform-admin` only
+- `POST /api/token/client` returns a token for `thirdparty-consumer`
+- `GET /api/documents/integration-export` allows `platform-integration`
+- `GET /api/documents` still requires a user role
+- `GET /api/documents/confidential` still requires `platform-admin`
 
 Expected result through ThirdParty Consumer Swagger:
 
-- `architect.user` token -> `/api/documents` returns `200`
-- `architect.user` token -> `/api/documents/confidential` returns `403`
-- `architect.admin` token -> both document endpoints return `200`
+- `thirdparty-consumer` client token -> `/api/documents/integration-export` returns `200`
+- `thirdparty-consumer` client token -> `/api/documents` returns `403`
+- `thirdparty-consumer` client token -> `/api/documents/confidential` returns `403`
+
+User-level document access is intended for the platform web client path. The
+next integration step is OIDC Authorization Code flow with cookie login in
+`Platform.WebClient`.
 
 ### Run projects individually
 
@@ -147,12 +152,13 @@ dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
 - REST API `GET /api/documents` - read documents
 - REST API `POST /api/documents` - create a document
 - REST API `GET /api/documents/confidential` - read admin-only confidential documents
-- ThirdParty Consumer `POST /api/token/user` - get a user token for Swagger testing
-- ThirdParty Consumer `POST /api/token/admin` - get an admin token for Swagger testing
+- REST API `GET /api/documents/integration-export` - read integration export documents with an application token
+- ThirdParty Consumer `POST /api/token/client` - get a client credentials token for Swagger testing
 - ThirdParty Consumer `GET /api/documents` - call the REST API through the SDK using the supplied bearer token
 - ThirdParty Consumer `POST /api/documents` - create a document through the SDK using the supplied bearer token
 - ThirdParty Consumer `GET /api/documents/from-sdk` - SDK-backed document query in the third-party consumer
 - ThirdParty Consumer `GET /api/documents/confidential` - call the admin-only document endpoint through the SDK
+- ThirdParty Consumer `GET /api/documents/integration-export` - call the integration export endpoint through the SDK
 
 ## Why this architecture exists
 

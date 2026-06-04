@@ -46,6 +46,12 @@ public class DocumentsController : ControllerBase
         return await ExecuteAsync(() => _client.GetDocumentsAsync());
     }
 
+    [HttpGet("integration-export")]
+    public async Task<IResult> GetIntegrationExportDocuments()
+    {
+        return await ExecuteAsync(() => _client.GetIntegrationExportDocumentsAsync());
+    }
+
     private static async Task<IResult> ExecuteAsync<T>(Func<Task<T>> action)
     {
         try

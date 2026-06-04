@@ -14,6 +14,10 @@
       {
         "name": "platform-admin",
         "description": "Administrator allowed to execute privileged platform operations."
+      },
+      {
+        "name": "platform-integration",
+        "description": "Service role for machine-to-machine document integrations."
       }
     ]
   },
@@ -27,7 +31,7 @@
       "secret": "platform-webclient-secret",
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
         "http://localhost:5001/signin-oidc",
@@ -75,8 +79,8 @@
       "secret": "thirdparty-consumer-secret",
       "standardFlowEnabled": false,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
       "protocolMappers": [
         {
           "name": "platform-rest-api audience",
@@ -119,6 +123,15 @@
     }
   ],
   "users": [
+    {
+      "username": "service-account-thirdparty-consumer",
+      "enabled": true,
+      "emailVerified": true,
+      "serviceAccountClientId": "thirdparty-consumer",
+      "realmRoles": [
+        "platform-integration"
+      ]
+    },
     {
       "username": "architect.user",
       "enabled": true,

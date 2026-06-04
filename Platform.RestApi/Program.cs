@@ -29,7 +29,7 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
-    // 普通文档允许普通用户和管理员访问；保密文档只允许管理员访问。
+    // 用户链路：普通文档允许普通用户和管理员访问；保密文档只允许管理员访问。
     options.AddPolicy("PlatformUser", policy =>
     {
         policy.RequireRole("platform-user", "platform-admin");
@@ -38,6 +38,12 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("PlatformAdmin", policy =>
     {
         policy.RequireRole("platform-admin");
+    });
+
+    // 应用链路：第三方后台集成使用 client credentials，不代表某个用户。
+    options.AddPolicy("PlatformIntegration", policy =>
+    {
+        policy.RequireRole("platform-integration");
     });
 });
 builder.Services.AddHttpClient();

@@ -13,15 +13,13 @@ public class KeycloakTokenClient : IKeycloakTokenClient
         _configuration = configuration;
     }
 
-    public async Task<TokenResponse> RequestPasswordTokenAsync(PasswordTokenRequest request)
+    public async Task<TokenResponse> RequestClientCredentialsTokenAsync(ClientCredentialsTokenRequest request)
     {
         var form = new Dictionary<string, string>
         {
-            ["grant_type"] = "password",
+            ["grant_type"] = "client_credentials",
             ["client_id"] = request.ClientId,
-            ["client_secret"] = request.ClientSecret,
-            ["username"] = request.Username,
-            ["password"] = request.Password
+            ["client_secret"] = request.ClientSecret
         };
 
         var httpClient = _httpClientFactory.CreateClient();

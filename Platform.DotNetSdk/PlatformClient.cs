@@ -24,6 +24,12 @@ public class PlatformClient : IPlatformClient
         return result ?? new List<Document>();
     }
 
+    public async Task<IReadOnlyList<Document>> GetIntegrationExportDocumentsAsync()
+    {
+        var result = await _httpClient.GetFromJsonAsync<List<Document>>("api/documents/integration-export");
+        return result ?? new List<Document>();
+    }
+
     public async Task<Document> CreateDocumentAsync(Document document)
     {
         var response = await _httpClient.PostAsJsonAsync("api/documents", document);

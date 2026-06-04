@@ -15,11 +15,18 @@ public class DocumentsController : ControllerBase
         new DocumentDto { Id = 2, Title = "Purchase Order 2026-02", Content = "Customer B, amount 3,400" },
     };
 
-    // 保密文档用于展示资源级授权：只有 platform-admin 可以读取。
+    // 保密文档用于展示用户级授权：只有 platform-admin 可以读取。
     private static readonly List<DocumentDto> ConfidentialDocuments = new()
     {
         new DocumentDto { Id = 1001, Title = "Board Contract 2026", Content = "Restricted document for platform administrators." },
         new DocumentDto { Id = 1002, Title = "Legal Hold Case", Content = "Confidential legal metadata and retention notes." },
+    };
+
+    // 集成导出用于展示应用级授权：client credentials token 可以访问，但不代表某个用户。
+    private static readonly List<DocumentDto> IntegrationExportDocuments = new()
+    {
+        new DocumentDto { Id = 2001, Title = "Integration Export Manifest", Content = "Document metadata prepared for a third-party integration." },
+        new DocumentDto { Id = 2002, Title = "External Sync Batch", Content = "Non-confidential batch payload for machine-to-machine processing." },
     };
 
     [HttpGet]
@@ -34,6 +41,13 @@ public class DocumentsController : ControllerBase
     public ActionResult<IEnumerable<DocumentDto>> GetConfidential()
     {
         return Ok(ConfidentialDocuments);
+    }
+
+    [HttpGet("integration-export")]
+    [Authorize(Policy = "PlatformIntegration")]
+    public ActionResult<IEnumerable<DocumentDto>> GetIntegrationExport()
+    {
+        return Ok(IntegrationExportDocuments);
     }
 
     [HttpGet("{id}")]
