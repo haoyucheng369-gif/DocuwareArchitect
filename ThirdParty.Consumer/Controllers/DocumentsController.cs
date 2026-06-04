@@ -1,7 +1,7 @@
-using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Platform.DotNetSdk;
 using Platform.DotNetSdk.Models;
+using ThirdParty.Consumer.Integration;
 
 namespace ThirdParty.Consumer.Controllers;
 
@@ -19,78 +19,42 @@ public class DocumentsController : ControllerBase
     [HttpGet]
     public async Task<IResult> GetDocuments()
     {
-        try
-        {
-            return Results.Ok(await _client.GetDocumentsAsync());
-        }
-        catch (Exception ex)
-        {
-            return ToIntegrationError(ex);
-        }
+        return await ExecuteAsync(() => _client.GetDocumentsAsync());
     }
 
     [HttpGet("confidential")]
     public async Task<IResult> GetConfidentialDocuments()
     {
-        try
-        {
-            return Results.Ok(await _client.GetConfidentialDocumentsAsync());
-        }
-        catch (Exception ex)
-        {
-            return ToIntegrationError(ex);
-        }
+        return await ExecuteAsync(() => _client.GetConfidentialDocumentsAsync());
     }
 
     [HttpPost]
     public async Task<IResult> CreateDocument()
     {
-        try
+        var document = new Document
         {
-            var document = new Document
-            {
-                Title = "Third-party created document",
-                Content = "This document was created by the consumer API."
-            };
+            Title = "Third-party created document",
+            Content = "This document was created by the consumer API."
+        };
 
-            return Results.Ok(await _client.CreateDocumentAsync(document));
-        }
-        catch (Exception ex)
-        {
-            return ToIntegrationError(ex);
-        }
+        return await ExecuteAsync(() => _client.CreateDocumentAsync(document));
     }
 
     [HttpGet("from-sdk")]
     public async Task<IResult> GetDocumentsFromSdk()
     {
+        return await ExecuteAsync(() => _client.GetDocumentsAsync());
+    }
+
+    private static async Task<IResult> ExecuteAsync<T>(Func<Task<T>> action)
+    {
         try
         {
-            return Results.Ok(await _client.GetDocumentsAsync());
+            return Results.Ok(await action());
         }
         catch (Exception ex)
         {
-            return ToIntegrationError(ex);
+            return IntegrationErrorMapper.ToResult(ex);
         }
-    }
-
-    private static IResult ToIntegrationError(Exception exception)
-    {
-        if (exception is UnauthorizedAccessException)
-        {
-            return Results.Problem(exception.Message, statusCode: StatusCodes.Status401Unauthorized);
-        }
-
-        if (exception is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
-        {
-            return Results.Problem(exception.Message, statusCode: StatusCodes.Status401Unauthorized);
-        }
-
-        if (exception is HttpRequestException { StatusCode: HttpStatusCode.Forbidden })
-        {
-            return Results.Problem(exception.Message, statusCode: StatusCodes.Status403Forbidden);
-        }
-
-        return Results.Problem(exception.Message, statusCode: StatusCodes.Status502BadGateway);
     }
 }
