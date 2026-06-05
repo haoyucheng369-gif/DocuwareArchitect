@@ -13,32 +13,35 @@ use a typed client library over the same REST API.
 ## Architecture Overview
 
 ```mermaid
-flowchart TB
-    subgraph Core["DocumentPlatformArchitect Core"]
-        I[Keycloak Identity Service]
-        R[Platform.RestApi]
-        S[Platform.DotNetSdk]
+flowchart LR
+    subgraph Identity["External Identity Provider"]
+        I[Keycloak<br/>OIDC / OAuth2]
     end
 
-    subgraph FirstParty["Platform UI"]
-        W[Platform.WebClient]
+    subgraph Platform["Document Platform"]
+        W[Platform.WebClient<br/>server-rendered UI]
+        R[Platform.RestApi<br/>protected resource API]
+        S[Platform.DotNetSdk<br/>platform client library]
     end
 
-    subgraph External["Third-party integration"]
+    subgraph External["Third-party Application"]
         T[ThirdParty.Consumer]
     end
 
-    W -->|HTTP / REST with user bearer token| R
-    W -->|OIDC authorization code + cookie| I
+    W -->|REST with user bearer token| R
+    W -->|authorization code login| I
+
     T -->|client credentials token| I
-    T -->|SDK call| S
-    S -->|HTTP / REST with bearer token| R
-    R -->|validate JWT issuer, audience, roles| I
+    T -->|uses SDK package| S
+    S -->|REST with forwarded bearer token| R
+
+    R -.->|validate issuer / audience / roles| I
 ```
 
 > Note: this diagram describes the current implementation. The web client uses
 > OIDC authorization code flow with a server-side cookie session. The `.NET SDK`
-> remains an optional wrapper for third-party .NET applications.
+> is a platform-provided client library for third-party .NET applications, not
+> a standalone runtime service.
 
 ## Authentication Flows
 
