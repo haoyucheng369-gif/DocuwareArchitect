@@ -21,6 +21,7 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:80
       - Authentication__Authority=http://keycloak:8080/realms/document-platform
+      - Authentication__ExternalAuthority=http://localhost:8080/realms/document-platform
       - Authentication__Audience=platform-rest-api
     depends_on:
       - keycloak
@@ -33,6 +34,10 @@ services:
       - "5001:80"
     environment:
       - ASPNETCORE_URLS=http://+:80
+      - Authentication__Oidc__Authority=http://keycloak:8080/realms/document-platform
+      - Authentication__Oidc__ExternalAuthority=http://localhost:8080/realms/document-platform
+      - Authentication__Oidc__ClientId=platform-webclient
+      - Authentication__Oidc__ClientSecret=platform-webclient-secret
       - PlatformApi__BaseUrl=http://restapi
     depends_on:
       - keycloak

@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var authority = builder.Configuration["Authentication:Authority"]
     ?? throw new InvalidOperationException("Authentication:Authority is required");
+var externalAuthority = builder.Configuration["Authentication:ExternalAuthority"];
 var audience = builder.Configuration["Authentication:Audience"]
     ?? throw new InvalidOperationException("Authentication:Audience is required");
 
@@ -22,6 +23,7 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidAudience = audience,
+            ValidIssuers = BuildValidIssuers(authority, externalAuthority),
             NameClaimType = "preferred_username",
             RoleClaimType = "roles"
         };
@@ -78,3 +80,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
+static IEnumerable<string> BuildValidIssuers(string? internalAuthority, string? externalAuthority)
+{
+    return new[] { internalAuthority, externalAuthority }
+        .Where(value => !string.IsNullOrWhiteSpace(value))
+        .Select(value => value!.TrimEnd('/'))
+        .Distinct(StringComparer.OrdinalIgnoreCase);
+}

@@ -35,12 +35,17 @@
       "serviceAccountsEnabled": false,
       "redirectUris": [
         "http://localhost:5001/signin-oidc",
-        "http://localhost:5167/signin-oidc"
+        "http://localhost:5167/signin-oidc",
+        "https://localhost:7131/signin-oidc"
       ],
       "webOrigins": [
         "http://localhost:5001",
-        "http://localhost:5167"
+        "http://localhost:5167",
+        "https://localhost:7131"
       ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:5001/signout-callback-oidc##http://localhost:5167/signout-callback-oidc##https://localhost:7131/signout-callback-oidc"
+      },
       "protocolMappers": [
         {
           "name": "platform-rest-api audience",

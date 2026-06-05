@@ -14,7 +14,15 @@ public class PlatformApiClient : IPlatformApiClient
 
     public async Task<IReadOnlyList<DocumentViewModel>> GetDocumentsAsync()
     {
+        // 这里保持薄封装：只描述 RestApi 资源路径和序列化，不处理认证细节。
         var documents = await _httpClient.GetFromJsonAsync<List<DocumentViewModel>>("api/documents");
+        return documents ?? new List<DocumentViewModel>();
+    }
+
+    public async Task<IReadOnlyList<DocumentViewModel>> GetConfidentialDocumentsAsync()
+    {
+        // 如果当前用户没有 platform-admin，RestApi 会返回 403，由上层 controller 转成页面提示。
+        var documents = await _httpClient.GetFromJsonAsync<List<DocumentViewModel>>("api/documents/confidential");
         return documents ?? new List<DocumentViewModel>();
     }
 

@@ -28,33 +28,32 @@ flowchart TB
         T[ThirdParty.Consumer]
     end
 
-    W -->|HTTP / REST| R
-    W -.->|OIDC cookie login - next step| I
-    T -->|request user token| I
+    W -->|HTTP / REST with user bearer token| R
+    W -->|OIDC authorization code + cookie| I
+    T -->|client credentials token| I
     T -->|SDK call| S
     S -->|HTTP / REST with bearer token| R
     R -->|validate JWT issuer, audience, roles| I
 ```
 
-> Note: this diagram describes the current implementation. The web client calls
-> the REST API directly; OIDC cookie login for the web client is the next step.
-> The `.NET SDK` remains an optional wrapper for third-party .NET
-> applications.
+> Note: this diagram describes the current implementation. The web client uses
+> OIDC authorization code flow with a server-side cookie session. The `.NET SDK`
+> remains an optional wrapper for third-party .NET applications.
 
 ## Component Responsibilities
 
 - **Keycloak Identity Service**: OAuth2/OpenID Connect identity boundary used by both the browser-facing web client path and the SDK-based integration path.
 - **Platform.RestApi**: core REST platform exposing document resources and platform APIs. Document endpoints are protected with JWT bearer authentication issued by Keycloak.
 - **Platform.DotNetSdk**: .NET SDK wrapper that encapsulates REST requests and exposes a developer-friendly client interface (`IPlatformClient`). The SDK accepts a host-provided token provider and attaches the returned bearer token to REST API requests. It does not own the OAuth client registration.
-- **Platform.WebClient**: MVC platform application that calls `Platform.RestApi` directly, similar to a browser-hosted product UI using platform endpoints.
+- **Platform.WebClient**: MVC platform application using OIDC authorization code login, a server-side cookie session, and user access tokens when calling `Platform.RestApi`.
 - **ThirdParty.Consumer**: external consumer app simulating a third-party integration that references the SDK DLL and calls the platform through client methods.
 
 ## Architecture Coverage
 
 - A core REST API as the main platform boundary.
 - A typed .NET client library over the REST API.
-- A first-party web client that calls REST endpoints directly.
-- A third-party .NET consumer that obtains a user token through its own OAuth client registration and calls the same REST platform through the SDK.
+- A first-party web client that signs users in through authorization code flow and calls REST endpoints with user access tokens.
+- A third-party .NET consumer that obtains an application token through its own OAuth client registration and calls the same REST platform through the SDK.
 - Identity/token separation from platform operations.
 - Dependency-injected HTTP clients and configuration-driven service endpoints.
 - Docker Compose orchestration for the platform services.
@@ -77,10 +76,10 @@ document validation, and collaboration are outside the current scope.
 Authentication is represented as a separate boundary backed by Keycloak. The
 current repository includes a realm import with clients for the web client, REST
 API, and a third-party consumer application. REST API token validation is
-enabled. The SDK delegates token resolution to the host application; the current
-third-party consumer reads a bearer token from the incoming request and forwards
-it through the SDK.
-WebClient OIDC cookie login is the next integration step.
+enabled. The web client uses OIDC authorization code flow and stores the user
+session in an application cookie. The SDK delegates token resolution to the host
+application; the current third-party consumer reads a bearer token from the
+incoming request and forwards it through the SDK.
 
 ## Running the Architecture
 
@@ -135,9 +134,10 @@ Expected result through ThirdParty Consumer Swagger:
 - `thirdparty-consumer` client token -> `/api/documents` returns `403`
 - `thirdparty-consumer` client token -> `/api/documents/confidential` returns `403`
 
-User-level document access is intended for the platform web client path. The
-next integration step is OIDC Authorization Code flow with cookie login in
-`Platform.WebClient`.
+Expected result through Platform WebClient:
+
+- `architect.user` / `password` -> standard documents visible, confidential documents show an access warning
+- `architect.admin` / `password` -> standard and confidential documents visible
 
 ### Run projects individually
 
@@ -153,6 +153,9 @@ dotnet run --project ThirdParty.Consumer\ThirdParty.Consumer.csproj
 - REST API `POST /api/documents` - create a document
 - REST API `GET /api/documents/confidential` - read admin-only confidential documents
 - REST API `GET /api/documents/integration-export` - read integration export documents with an application token
+- WebClient `GET /` - sign in through Keycloak and read documents through the REST API
+- WebClient `GET /account/login` - start OIDC authorization code login
+- WebClient `POST /account/logout` - clear the local cookie session and sign out from Keycloak
 - ThirdParty Consumer `POST /api/token/client` - get a client credentials token for Swagger testing
 - ThirdParty Consumer `GET /api/documents` - call the REST API through the SDK using the supplied bearer token
 - ThirdParty Consumer `POST /api/documents` - create a document through the SDK using the supplied bearer token
