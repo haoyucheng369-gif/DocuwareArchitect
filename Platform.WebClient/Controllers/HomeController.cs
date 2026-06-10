@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
@@ -25,11 +26,15 @@ public class HomeController : Controller
         try
         {
             // 普通文档要求 platform-user；未登录用户会先被 [Authorize] 带到 Keycloak 登录页。
+            var tokenInfo = await GetAccessTokenInfoAsync();
             var model = new DocumentsPageViewModel
             {
                 UserName = User.Identity?.Name ?? "unknown",
                 Roles = GetRoles(),
                 AuthenticationType = User.Identity?.AuthenticationType ?? "unknown",
+                ClientId = tokenInfo.ClientId,
+                Audiences = tokenInfo.Audiences,
+                Scopes = tokenInfo.Scopes,
                 Documents = await _platformApiClient.GetDocumentsAsync()
             };
 
@@ -95,4 +100,34 @@ public class HomeController : Controller
             .OrderBy(role => role)
             .ToArray();
     }
+
+    private async Task<AccessTokenInfo> GetAccessTokenInfoAsync()
+    {
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return new AccessTokenInfo("not available", [], []);
+        }
+
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
+        var clientId = jwt.Claims.FirstOrDefault(claim => claim.Type is "azp" or "client_id")?.Value
+            ?? "not available";
+        var audiences = jwt.Audiences
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(audience => audience)
+            .ToArray();
+        var scopes = jwt.Claims
+            .Where(claim => claim.Type == "scope")
+            .SelectMany(claim => claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(scope => scope)
+            .ToArray();
+
+        return new AccessTokenInfo(clientId, audiences, scopes);
+    }
+
+    private sealed record AccessTokenInfo(
+        string ClientId,
+        IReadOnlyList<string> Audiences,
+        IReadOnlyList<string> Scopes);
 }

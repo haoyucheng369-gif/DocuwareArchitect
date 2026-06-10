@@ -37,6 +37,38 @@
                     }
                 }
             </div>
+            <div class="col-md-4">
+                <div class="small text-muted">OAuth Client</div>
+                <div class="fw-semibold">@Model.ClientId</div>
+            </div>
+            <div class="col-md-4">
+                <div class="small text-muted">Audience</div>
+                @if (Model.Audiences.Count == 0)
+                {
+                    <span class="badge text-bg-secondary">none</span>
+                }
+                else
+                {
+                    foreach (var audience in Model.Audiences)
+                    {
+                        <span class="badge text-bg-dark me-1">@audience</span>
+                    }
+                }
+            </div>
+            <div class="col-md-4">
+                <div class="small text-muted">Scopes</div>
+                @if (Model.Scopes.Count == 0)
+                {
+                    <span class="badge text-bg-secondary">none</span>
+                }
+                else
+                {
+                    foreach (var scope in Model.Scopes)
+                    {
+                        <span class="badge text-bg-info me-1">@scope</span>
+                    }
+                }
+            </div>
         </div>
     </div>
 

@@ -54,7 +54,7 @@
           "consentRequired": false,
           "config": {
             "included.client.audience": "platform-rest-api",
-            "id.token.claim": "false",
+            "id.token.claim": "true",
             "access.token.claim": "true"
           }
         }
