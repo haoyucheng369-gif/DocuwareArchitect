@@ -14,6 +14,8 @@ use a typed client library over the same REST API.
 
 ```mermaid
 flowchart LR
+    BROWSER[Browser]
+
     subgraph Identity["External Identity Provider"]
         I[Keycloak<br/>OIDC / OAuth2]
     end
@@ -28,20 +30,31 @@ flowchart LR
         T[ThirdParty.Consumer]
     end
 
-    W -->|REST with user bearer token| R
-    W -->|authorization code login| I
+    BROWSER -->|"A1: open WebClient with app cookie"| W
+    W -->|"A2: authorization code login"| I
+    I -->|"A3: return code and user tokens"| W
+    W -->|"A4: call REST API with user bearer token"| R
+    R -.->|"A5: validate JWT issuer, audience, roles"| I
+    W -->|"A6: render HTML response"| BROWSER
 
-    T -->|client credentials token| I
-    T -->|uses SDK package| S
-    S -->|REST with forwarded bearer token| R
-
-    R -.->|validate issuer / audience / roles| I
+    T -->|"B1: request client credentials token"| I
+    I -->|"B2: return application access token"| T
+    T -->|"B3: call platform SDK package"| S
+    S -->|"B4: forward bearer token to REST API"| R
+    R -.->|"B5: validate integration role"| I
+    R -->|"B6: return integration result"| S
+    S -->|"B7: return typed SDK result"| T
 ```
 
 > Note: this diagram describes the current implementation. The web client uses
 > OIDC authorization code flow with a server-side cookie session. The `.NET SDK`
 > is a platform-provided client library for third-party .NET applications, not
 > a standalone runtime service.
+
+Path labels:
+
+- **A path**: browser user flow through `Platform.WebClient`.
+- **B path**: machine-to-machine third-party flow through `Platform.DotNetSdk`.
 
 ## Authentication Flows
 
@@ -54,18 +67,18 @@ sequenceDiagram
     participant I as Keycloak
     participant R as Platform.RestApi
 
-    B->>W: Open WebClient
-    W->>I: Redirect to OIDC authorization endpoint
-    B->>I: Sign in as architect.user or architect.admin
-    I->>W: Authorization code callback
-    W->>I: Exchange code with client secret
-    I->>W: User access token + id token
-    W->>B: WebClient cookie session
-    B->>W: Request documents with cookie
-    W->>R: REST call with user bearer token
-    R->>R: Check platform-user / platform-admin
-    R->>W: Documents or 403
-    W->>B: Render HTML
+    B->>W: A1: Open WebClient
+    W->>I: A2: Redirect to OIDC authorization endpoint
+    B->>I: A3: Sign in as architect.user or architect.admin
+    I->>W: A4: Authorization code callback
+    W->>I: A5: Exchange code with client secret
+    I->>W: A6: User access token + id token
+    W->>B: A7: WebClient cookie session
+    B->>W: A8: Request documents with cookie
+    W->>R: A9: REST call with user bearer token
+    R->>R: A10: Check platform-user / platform-admin
+    R->>W: A11: Documents or 403
+    W->>B: A12: Render HTML
 ```
 
 In this flow, the browser does not call `Platform.RestApi` directly and does
@@ -81,13 +94,13 @@ sequenceDiagram
     participant S as Platform.DotNetSdk
     participant R as Platform.RestApi
 
-    T->>I: Client credentials token request
-    I->>T: Application access token
-    T->>S: Call SDK with current bearer token
-    S->>R: REST call with forwarded bearer token
-    R->>R: Check platform-integration
-    R->>S: Integration documents or 403
-    S->>T: Typed SDK result
+    T->>I: B1: Client credentials token request
+    I->>T: B2: Application access token
+    T->>S: B3: Call SDK with current bearer token
+    S->>R: B4: REST call with forwarded bearer token
+    R->>R: B5: Check platform-integration
+    R->>S: B6: Integration documents or 403
+    S->>T: B7: Typed SDK result
 ```
 
 In this flow, the token represents the registered third-party application, not
